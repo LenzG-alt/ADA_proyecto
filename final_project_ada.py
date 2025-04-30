@@ -9,9 +9,6 @@ import psutil
 from collections import defaultdict
 import gc
 
-import os
-os.chdir('C:/Users/arapa/Documents/ADA')
-
 class CargadorRedSocial:
     def __init__(self):
         self.ubicaciones = None
@@ -373,90 +370,122 @@ class CargadorRedSocial:
             print(f"Error al buscar usuarios influyentes: {e}")
             return False
     
-    def buscar_por_ubicacion(self, lat, lon, radio_km=100):
-        """Busca usuarios cercanos a una ubicación geográfica"""
-        if self.ubicaciones is None:
-            print("ERROR: Primero debe cargar los datos de ubicaciones")
+    def buscar_camino_entre_usuarios(self, usuario_origen, usuario_destino, max_profundidad=4):
+        """Busca el camino más corto entre dos usuarios en la red social"""
+        if self.conexiones is None:
+            print("ERROR: Primero debe cargar los datos de conexiones")
             return False
             
-        print(f"\nBuscando usuarios cerca de ({lat}, {lon}) con radio de {radio_km} km...")
+        print(f"\nBuscando camino entre Usuario {usuario_origen} y Usuario {usuario_destino}...")
         inicio = time.time()
         
         try:
-            # Función para calcular distancia haversine (km)
-            def haversine(lat1, lon1, lat2, lon2):
-                # Radio de la Tierra en km
-                R = 6371.0
+            # Verificar que ambos usuarios existen en la red
+            if usuario_origen not in self.conexiones:
+                print(f"ERROR: El usuario {usuario_origen} no existe en la red o no tiene conexiones")
+                return False
                 
-                # Convertir a radianes
-                lat1_rad = np.radians(lat1)
-                lon1_rad = np.radians(lon1)
-                lat2_rad = np.radians(lat2)
-                lon2_rad = np.radians(lon2)
+            if usuario_destino not in self.conexiones and usuario_destino not in [dest for conex in self.conexiones.values() for dest in conex]:
+                print(f"ERROR: El usuario {usuario_destino} no existe en la red")
+                return False
+            
+            # Si tenemos un grafo de NetworkX, usamos su algoritmo de ruta más corta
+            # que es más eficiente para grafos pequeños/medianos
+            if self.G is not None and usuario_origen in self.G and usuario_destino in self.G:
+                print("Usando algoritmo de NetworkX para encontrar la ruta más corta...")
+                try:
+                    # Intentar encontrar el camino más corto
+                    camino = nx.shortest_path(self.G, source=usuario_origen, target=usuario_destino)
+                    
+                    tiempo = time.time() - inicio
+                    longitud = len(camino) - 1  # Número de conexiones = nodos - 1
+                    
+                    # Mostrar resultados
+                    print("\n" + "=" * 60)
+                    print(f"CAMINO ENCONTRADO ENTRE USUARIOS {usuario_origen} → {usuario_destino}")
+                    print("=" * 60)
+                    print(f"Longitud del camino: {longitud} conexiones")
+                    print(f"Ruta: {' → '.join(map(str, camino))}")
+                    print(f"\nTiempo de búsqueda: {tiempo:.4f} segundos")
+                    
+                    return camino
+                except nx.NetworkXNoPath:
+                    print(f"No existe un camino entre Usuario {usuario_origen} y Usuario {usuario_destino}")
+                    return None
+                except Exception as e:
+                    print(f"Error al buscar con NetworkX: {e}")
+                    print("Intentando con método de búsqueda en anchura (BFS)...")
+                    # Si falla, continuamos con el método BFS manual
+            
+            # BFS manual para grafos muy grandes o cuando no tenemos objeto NetworkX
+            print("Ejecutando búsqueda en anchura (BFS)...")
+            
+            # Inicializar cola de BFS con el nodo origen
+            cola = [(usuario_origen, [usuario_origen])]  # (nodo, camino hasta ese nodo)
+            visitados = set([usuario_origen])
+            
+            # Limitar profundidad máxima de búsqueda para evitar consumo excesivo de recursos
+            nivel_actual = 0
+            
+            # Contador para monitoreo
+            nodos_explorados = 0
+            
+            while cola:
+                # Mostrar progreso cada cierto número de nodos explorados
+                if nodos_explorados % 10000 == 0 and nodos_explorados > 0:
+                    print(f"Nodos explorados: {nodos_explorados:,} | Nivel de profundidad: {nivel_actual}")
                 
-                # Diferencias
-                dlat = lat2_rad - lat1_rad
-                dlon = lon2_rad - lon1_rad
+                # Extraer nodo y camino actual
+                nodo_actual, camino_actual = cola.pop(0)
+                nodos_explorados += 1
                 
-                # Fórmula haversine
-                a = np.sin(dlat/2)**2 + np.cos(lat1_rad) * np.cos(lat2_rad) * np.sin(dlon/2)**2
-                c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
+                # Si la longitud del camino supera la profundidad máxima, saltamos este nodo
+                # (esto es para evitar búsquedas infinitas o muy largas)
+                if len(camino_actual) > max_profundidad + 1:  # +1 porque incluye el nodo origen
+                    nivel_actual = len(camino_actual) - 1
+                    print(f"Alcanzada profundidad máxima ({max_profundidad}). Limitando búsqueda...")
+                    continue
                 
-                return R * c
+                # Actualizar nivel actual si es necesario
+                if len(camino_actual) - 1 > nivel_actual:
+                    nivel_actual = len(camino_actual) - 1
+                    print(f"Explorando nivel {nivel_actual}...")
+                
+                # Si el nodo actual es el destino, hemos encontrado un camino
+                if nodo_actual == usuario_destino:
+                    tiempo = time.time() - inicio
+                    
+                    # Mostrar resultados
+                    print("\n" + "=" * 60)
+                    print(f"CAMINO ENCONTRADO ENTRE USUARIOS {usuario_origen} → {usuario_destino}")
+                    print("=" * 60)
+                    print(f"Longitud del camino: {len(camino_actual) - 1} conexiones")
+                    print(f"Ruta: {' → '.join(map(str, camino_actual))}")
+                    print(f"Nodos explorados: {nodos_explorados:,}")
+                    print(f"\nTiempo de búsqueda: {tiempo:.4f} segundos")
+                    
+                    return camino_actual
+                
+                # Explorar vecinos (usuarios a los que sigue el usuario actual)
+                if nodo_actual in self.conexiones:
+                    for vecino in self.conexiones[nodo_actual]:
+                        if vecino not in visitados:
+                            # Crear nuevo camino añadiendo este vecino
+                            nuevo_camino = camino_actual + [vecino]
+                            cola.append((vecino, nuevo_camino))
+                            visitados.add(vecino)
             
-            # Convertir dataframe a numpy para operaciones más rápidas
-            ubicaciones_np = self.ubicaciones.to_numpy()
-            
-            print("Calculando distancias...")
-            # Vectorizar la función para mayor eficiencia
-            distancias = np.array([haversine(lat, lon, row[0], row[1]) for row in tqdm(ubicaciones_np)])
-            
-            # Encontrar usuarios dentro del radio
-            usuarios_cercanos = np.where(distancias <= radio_km)[0]
-            
-            # Obtener IDs (sumando 1 ya que la indexación comienza en 1)
-            ids_cercanos = [i+1 for i in usuarios_cercanos]
-            
+            # Si llegamos aquí, no se encontró camino
             tiempo = time.time() - inicio
+            print(f"\nNo se encontró camino entre Usuario {usuario_origen} y Usuario {usuario_destino}")
+            print(f"Nodos explorados: {nodos_explorados:,}")
+            print(f"Tiempo de búsqueda: {tiempo:.4f} segundos")
             
-            # Mostrar resultados
-            print("\n" + "=" * 60)
-            print(f"USUARIOS CERCANOS A ({lat}, {lon})")
-            print("=" * 60)
-            print(f"Radio de búsqueda: {radio_km} km")
-            print(f"Total de usuarios encontrados: {len(ids_cercanos):,}")
-            
-            if len(ids_cercanos) > 0:
-                # Mostrar muestra de usuarios
-                print("\nMuestra de usuarios (primeros 20):")
-                for i, usuario_id in enumerate(ids_cercanos[:20], 1):
-                    dist = distancias[usuario_id-1]  # Restar 1 por indexación
-                    print(f"  {i}. Usuario ID: {usuario_id} - Distancia: {dist:.2f} km")
-                
-                # Si hay conexiones cargadas, analizar la subred
-                if self.conexiones is not None:
-                    conexiones_internas = 0
-                    usuarios_con_conexiones = 0
-                    
-                    print("\nAnalizando conexiones entre usuarios de la región...")
-                    for uid in tqdm(ids_cercanos, desc="Analizando conexiones"):
-                        if uid in self.conexiones:
-                            # Contar conexiones hacia otros usuarios de la región
-                            conexiones_region = [c for c in self.conexiones[uid] if c in ids_cercanos]
-                            if conexiones_region:
-                                usuarios_con_conexiones += 1
-                                conexiones_internas += len(conexiones_region)
-                    
-                    print(f"\nConexiones internas en la región: {conexiones_internas:,}")
-                    print(f"Usuarios con conexiones internas: {usuarios_con_conexiones:,} ({usuarios_con_conexiones/len(ids_cercanos)*100:.2f}%)")
-            
-            print(f"\nTiempo de análisis: {tiempo:.2f} segundos")
-            
-            return ids_cercanos
+            return None
             
         except Exception as e:
-            print(f"Error al buscar por ubicación: {e}")
-            return False
+            print(f"Error al buscar camino entre usuarios: {e}")
+            return None
     
     def guardar_datos_procesados(self, directorio="datos_procesados"):
         """Guarda los datos procesados para uso posterior"""
@@ -516,7 +545,7 @@ def mostrar_menu():
     print("4. Crear grafo con NetworkX (solo con muestra)")
     print("5. Analizar distribución de grado")
     print("6. Buscar usuarios más influyentes")
-    print("7. Buscar usuarios por ubicación geográfica")
+    print("7. Buscar camino entre dos usuarios")
     print("8. Guardar datos procesados")
     print("9. Limpiar memoria")
     print("0. Salir")
@@ -621,24 +650,33 @@ def ejecutar_menu():
                     print("ERROR: Debe ingresar un número válido")
                 
             elif opcion == 7:
-                # Buscar usuarios por ubicación geográfica
-                if cargador.ubicaciones is None:
-                    print("ERROR: Primero debe cargar los datos de ubicaciones")
+                # Buscar camino entre dos usuarios
+                if cargador.conexiones is None:
+                    print("ERROR: Primero debe cargar los datos de conexiones")
                     continue
                 
                 try:
-                    lat = float(input("Ingrese la latitud del punto central: "))
-                    lon = float(input("Ingrese la longitud del punto central: "))
-                    radio = float(input("Ingrese el radio de búsqueda en kilómetros: "))
+                    usuario_origen = int(input("Ingrese el ID del usuario de origen: "))
+                    usuario_destino = int(input("Ingrese el ID del usuario de destino: "))
                     
-                    if radio <= 0:
-                        print("ERROR: El radio debe ser positivo")
+                    if usuario_origen <= 0 or usuario_destino <= 0:
+                        print("ERROR: Los IDs de usuario deben ser positivos")
                         continue
                         
-                    cargador.buscar_por_ubicacion(lat, lon, radio)
+                    # Solicitar la profundidad máxima de búsqueda
+                    max_profundidad = int(input("Ingrese la profundidad máxima de búsqueda (recomendado 3-6): "))
+                    if max_profundidad <= 0:
+                        print("ERROR: La profundidad debe ser positiva")
+                        continue
+                    elif max_profundidad > 8:
+                        confirmar = input(f"ADVERTENCIA: Una profundidad de {max_profundidad} puede tardar mucho tiempo. ¿Continuar? (s/n): ")
+                        if confirmar.lower() != 's':
+                            continue
+                    
+                    cargador.buscar_camino_entre_usuarios(usuario_origen, usuario_destino, max_profundidad)
                     
                 except ValueError:
-                    print("ERROR: Debe ingresar coordenadas válidas")
+                    print("ERROR: Debe ingresar IDs de usuario válidos")
                 
             elif opcion == 8:
                 # Guardar datos procesados
