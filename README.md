@@ -1,9 +1,9 @@
 # Autor
 Desarrollado como proyecto final del curso Algoritmos y Análisis de Datos (ADA).
 
-## INTEGRANTEs
+## INTEGRANTES
 - `Davis Yovanny Arapa Chua`
-- `Leonardo Rhapael Pachari GOomez`
+- `Leonardo Rhapael Pachari Gomez`
 
 # 🔍 Análisis de Redes Sociales a Gran Escala
 
