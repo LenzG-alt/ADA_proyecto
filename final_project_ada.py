@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
 import os
 import time
 import sys
@@ -603,27 +604,63 @@ def ejecutar_menu():
                     print(f"Longitud media del camino más corto: {nx.average_shortest_path_length(cargador.G):.4f}")
                 
             elif opcion == 4:
-                # Crear grafo con NetworkX (solo con muestra)
-                if cargador.conexiones is None:
-                    print("ERROR: Primero debe cargar los datos de conexiones")
+                # Crear grafo con NetworkX y visualizarlo (solo con muestra)
+            if cargador.conexiones is None:
+                print("ERROR: Primero debe cargar los datos de conexiones")
+                continue
+        
+            try:
+                tamaño = int(input("Ingrese el tamaño de la muestra para el grafo (recomendado <1000 para visualización): "))
+                if tamaño <= 0:
+                    print("ERROR: El tamaño debe ser un número positivo")
                     continue
-                    
-                try:
-                    tamaño = int(input("Ingrese el tamaño de la muestra para el grafo (recomendado <100,000): "))
-                    if tamaño <= 0:
-                        print("ERROR: El tamaño debe ser un número positivo")
-                        continue
-                        
-                    if tamaño > 100000:
-                        confirmar = input(f"ADVERTENCIA: Crear un grafo con {tamaño:,} nodos puede consumir mucha memoria. ¿Continuar? (s/n): ")
-                        if confirmar.lower() != 's':
-                            continue
-                    
-                    cargador.crear_grafo_networkx(tamaño)
-                    
-                except ValueError:
-                    print("ERROR: Debe ingresar un número válido")
             
+                if tamaño > 1000:
+                    confirmar = input(f"ADVERTENCIA: Visualizar un grafo con {tamaño:,} nodos puede ser lento y difícil de interpretar. ¿Continuar? (s/n): ")
+                    if confirmar.lower() != 's':
+                        continue
+        
+                # Crear el grafo con el tamaño especificado
+                if not cargador.crear_grafo_networkx(tamaño):
+                    print("ERROR: No se pudo crear el grafo")
+                    continue
+        
+                # Importar matplotlib para visualización
+                import matplotlib.pyplot as plt
+                
+                print("\nGenerando visualización del grafo...")
+                
+                # Configurar el diseño del grafo
+                plt.figure(figsize=(12, 8))  # Tamaño de la figura
+                
+                # Usar un diseño de resorte (spring layout) para una mejor distribución
+                pos = nx.spring_layout(cargador.G, k=1.5/np.sqrt(cargador.G.number_of_nodes()), iterations=50)
+                
+                # Dibujar nodos y aristas
+                nx.draw_networkx_nodes(cargador.G, pos, node_size=50, node_color='lightblue', alpha=0.7)
+                nx.draw_networkx_edges(cargador.G, pos, alpha=0.3)
+                
+                # Añadir etiquetas a los nodos (opcional, solo para grafos pequeños)
+                if tamaño <= 100:
+                    nx.draw_networkx_labels(cargador.G, pos, font_size=8)
+                
+                # Configurar título y ajustar diseño
+                plt.title(f"Grafo de Red Social (Muestra de {cargador.G.number_of_nodes():,} nodos)")
+                plt.axis('off')  # Ocultar ejes para mejor visualización
+                plt.tight_layout()
+                
+                # Mostrar el grafo
+                plt.show()
+                
+                print(f"Visualización generada con {cargador.G.number_of_nodes():,} nodos y {cargador.G.number_of_edges():,} aristas")
+                
+            except ValueError:
+                print("ERROR: Debe ingresar un número válido")
+            except ImportError:
+                print("ERROR: Matplotlib no está instalado. Instálelo con 'pip install matplotlib'")
+            except Exception as e:
+                print(f"ERROR al generar la visualización: {e}")
+                    
             elif opcion == 5:
                 # Analizar distribución de grado
                 if cargador.conexiones is None:
