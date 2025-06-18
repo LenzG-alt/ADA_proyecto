@@ -13,8 +13,18 @@ def estadisticas_grado(conexiones):
             if amigo < len(grados_entrada):
                 grados_entrada[amigo] += 1
 
-    print(f"Número total de nodos: {len(conexiones)}")
-    print(f"Número total de aristas: {sum(grados_salida)}")
+    num_nodos = len(conexiones)
+    num_aristas = sum(grados_salida)
+
+    print(f"Número total de nodos: {num_nodos}")
+    print(f"Número total de aristas: {num_aristas}")
+
+    if num_nodos > 1:
+        densidad = num_aristas / (num_nodos * (num_nodos - 1))
+        print(f"Densidad de la red: {densidad:.4f}")
+    else:
+        print("Densidad de la red: N/A (se requiere más de 1 nodo para calcular)")
+
     print(f"Grado promedio salida: {np.mean(grados_salida):.2f}")
     print(f"Grado promedio entrada: {np.mean(grados_entrada):.2f}")
     print(f"Máximo grado salida: {max(grados_salida)}")
