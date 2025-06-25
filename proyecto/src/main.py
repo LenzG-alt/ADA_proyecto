@@ -1,7 +1,7 @@
 # main.py
 import logging
 from tqdm import tqdm # Importar tqdm
-from config import DATASET_PATH, MAX_USERS_TO_LOAD as DEFAULT_MAX_USERS
+from config import DATASET_PATH, MAX_USERS_TO_LOAD as DEFAULT_MAX_USERS, CHUNK_SIZE
 from carga_datos import cargar_usuarios, cargar_ubicaciones
 from construccion_grafo import construir_grafo_desde_conexiones, GrafoNX
 import eda
@@ -92,9 +92,9 @@ def manejar_carga_datos(opcion_carga):
 
     # Simulación de progreso para carga de datos
     with tqdm(total=2, desc="Cargando datos") as pbar:
-        conexiones_cargadas = cargar_usuarios(DATASET_PATH['usuarios'], max_usuarios_a_cargar)
+        conexiones_cargadas = cargar_usuarios(DATASET_PATH['usuarios'], max_usuarios_a_cargar, CHUNK_SIZE)
         pbar.update(1)
-        ubicaciones_cargadas = cargar_ubicaciones(DATASET_PATH['ubicaciones'], max_usuarios_a_cargar)
+        ubicaciones_cargadas = cargar_ubicaciones(DATASET_PATH['ubicaciones'], max_usuarios_a_cargar, CHUNK_SIZE)
         pbar.update(1)
 
     num_usuarios_reales = len(conexiones_cargadas)
@@ -373,9 +373,9 @@ def manejar_carga_datos(opcion_carga):
         return
 
     with tqdm(total=2, desc="Cargando datos") as pbar:
-        conexiones_cargadas = cargar_usuarios(DATASET_PATH['usuarios'], max_usuarios_a_cargar)
+        conexiones_cargadas = cargar_usuarios(DATASET_PATH['usuarios'], max_usuarios_a_cargar, CHUNK_SIZE)
         pbar.update(1)
-        ubicaciones_cargadas = cargar_ubicaciones(DATASET_PATH['ubicaciones'], max_usuarios_a_cargar)
+        ubicaciones_cargadas = cargar_ubicaciones(DATASET_PATH['ubicaciones'], max_usuarios_a_cargar, CHUNK_SIZE)
         pbar.update(1)
 
     num_usuarios_reales = len(conexiones_cargadas)

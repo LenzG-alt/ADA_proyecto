@@ -45,7 +45,14 @@ def medir_tiempo(func: Callable) -> Callable:
         resultado = func(*args, **kwargs)
         fin = time.time()
         tiempo_transcurrido = fin - inicio
+        # Loguear siempre al archivo
         logging.info(f"Función {nombre_func} completada en {tiempo_transcurrido:.4f} segundos.")
+        # Imprimir en consola si el logger principal está en INFO o superior
+        # Esto evita duplicar mensajes si la consola ya muestra los logs INFO.
+        # Sin embargo, para asegurar que se vea en consola independientemente de la configuración del handler de consola,
+        # podemos imprimir directamente, o usar un logger específico para esto.
+        # Por simplicidad, imprimiremos directamente un mensaje formateado.
+        print(f"[INFO] {nombre_func} tomó {tiempo_transcurrido:.2f}s")
         return resultado
     return wrapper
 

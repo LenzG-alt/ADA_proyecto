@@ -12,5 +12,5 @@ DATASET_PATH = {
     'ubicaciones': os.path.join(DATOS_DIR, '10_million_location.txt')
 }
 
-MAX_USERS_TO_LOAD = 100_000  # Prueba con 100k usuarios primero
-# CHUNK_SIZE = 10_000 # No se está usando actualmente, pero podría ser útil para pandas si se lee en chunks
+MAX_USERS_TO_LOAD = 10_000_000  # Prueba con 100k usuarios primero
+CHUNK_SIZE = 100_000 # Tamaño de chunk para la carga de datos, ej: 100k líneas a la vez

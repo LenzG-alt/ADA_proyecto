@@ -1,25 +1,17 @@
-2025-06-24 10:01:22,131 - INFO - utils - setup_logger - Logger configurado.
-2025-06-24 10:01:22,132 - INFO - main - <module> - Iniciando aplicación de análisis de red social X.
-2025-06-24 10:01:32,019 - INFO - main - manejar_carga_datos - Iniciando carga de muestra de datos (100000 usuarios).
-2025-06-24 10:01:32,025 - INFO - carga_datos - cargar_usuarios - Iniciando carga de conexiones de usuarios desde: d:\5 SEMESTRE\ADA2\proyecto\datos\10_million_user.txt (max_lineas=100000)
-2025-06-24 10:01:42,185 - INFO - carga_datos - cargar_usuarios - Alcanzado el límite de 100000 usuarios a cargar.
-2025-06-24 10:01:42,185 - INFO - carga_datos - cargar_usuarios - Carga de usuarios completada. Usuarios procesados: 100000. Líneas con error (formato): 0.
-2025-06-24 10:01:42,185 - INFO - utils - wrapper - Función cargar_usuarios completada en 10.1592 segundos.
-2025-06-24 10:01:42,185 - INFO - carga_datos - cargar_ubicaciones - Iniciando carga de ubicaciones desde: d:\5 SEMESTRE\ADA2\proyecto\datos\10_million_location.txt (max_lineas=100000)
-2025-06-24 10:01:42,403 - INFO - carga_datos - cargar_ubicaciones - Alcanzado el límite de 100000 ubicaciones a leer.
-2025-06-24 10:01:42,403 - INFO - carga_datos - cargar_ubicaciones - Carga de ubicaciones completada. Filas leídas del archivo: 100000. Ubicaciones válidas procesadas: 100000.
-2025-06-24 10:01:42,403 - INFO - utils - wrapper - Función cargar_ubicaciones completada en 0.2182 segundos.
-2025-06-24 10:01:42,404 - INFO - main - manejar_carga_datos - Datos cargados: 100000 usuarios con conexiones, 100000 ubicaciones.
-2025-06-24 10:01:42,404 - INFO - main - manejar_carga_datos - Construyendo grafo...
-2025-06-24 10:01:42,404 - INFO - construccion_grafo - construir_grafo_desde_conexiones - Iniciando construcción de grafo con NetworkX. Usuarios con datos de conexión: 100000. Total de nodos a considerar en el grafo: 100000.
-2025-06-24 10:01:42,405 - INFO - construccion_grafo - __init__ - Grafo NetworkX dirigido inicializado.
-2025-06-24 10:02:05,236 - INFO - construccion_grafo - mostrar_info_basica - Información básica del grafo:
-2025-06-24 10:02:05,236 - INFO - construccion_grafo - mostrar_info_basica -   Número de nodos: 100000
-2025-06-24 10:02:05,236 - INFO - construccion_grafo - mostrar_info_basica -   Número de aristas: 13196942
-2025-06-24 10:02:05,253 - INFO - construccion_grafo - mostrar_info_basica -   Densidad del grafo: 0.001320
-2025-06-24 10:02:05,254 - INFO - utils - wrapper - Función construir_grafo_desde_conexiones completada en 22.8504 segundos.
-2025-06-24 10:02:05,254 - INFO - main - manejar_carga_datos - Grafo construido exitosamente.
-2025-06-24 10:02:11,551 - INFO - analisis_grafo - encontrar_comunidades - Detectando comunidades usando el método louvain...
-2025-06-24 10:02:11,552 - INFO - analisis_grafo - encontrar_comunidades - Convirtiendo grafo a no dirigido para detección de comunidades Louvain.
-2025-06-24 10:02:37,958 - ERROR - analisis_grafo - encontrar_comunidades - Error detectando comunidades con Louvain: module 'community' has no attribute 'best_partition'
-2025-06-24 10:02:39,226 - INFO - utils - wrapper - Función encontrar_comunidades completada en 27.6754 segundos.
+2025-06-24 20:49:55,102 - INFO - utils - setup_logger - Logger configurado.
+2025-06-24 20:49:55,102 - INFO - main - <module> - Iniciando aplicación de análisis de red social X.
+2025-06-24 20:49:58,490 - INFO - main - manejar_carga_datos - Iniciando carga de datos completos (hasta 10000000 usuarios).
+2025-06-24 20:49:58,499 - INFO - carga_datos - cargar_usuarios - Iniciando carga de conexiones de usuarios desde: c:\Users\Laboratorio\FINAL\ADA_proyecto\proyecto\datos\10_million_user.txt (max_lineas=10000000, chunk_size=100000)
+2025-06-24 20:50:38,259 - INFO - carga_datos - cargar_usuarios - Alcanzado el límite de 10000000 usuarios. Total procesados: 10000000
+2025-06-24 20:50:38,260 - INFO - carga_datos - cargar_usuarios - Carga de usuarios completada. Usuarios procesados en total: 10000000. Líneas con error (formato): 0.
+2025-06-24 20:50:38,261 - INFO - utils - wrapper - Función cargar_usuarios completada en 39.7620 segundos.
+2025-06-24 20:50:38,261 - INFO - carga_datos - cargar_ubicaciones - Iniciando carga de ubicaciones desde: c:\Users\Laboratorio\FINAL\ADA_proyecto\proyecto\datos\10_million_location.txt (max_lineas=10000000, chunk_size=100000)
+2025-06-24 20:53:34,170 - INFO - carga_datos - cargar_ubicaciones - Carga de ubicaciones completada. Filas totales intentadas procesar: 10000000. Ubicaciones válidas cargadas: 10000000.
+2025-06-24 20:53:34,171 - INFO - utils - wrapper - Función cargar_ubicaciones completada en 175.9097 segundos.
+2025-06-24 20:53:34,172 - INFO - main - manejar_carga_datos - Datos cargados: 10000000 usuarios con conexiones, 10000000 ubicaciones.
+2025-06-24 20:53:34,172 - INFO - main - manejar_carga_datos - Construyendo grafo...
+2025-06-24 20:53:34,172 - INFO - construccion_grafo - construir_grafo_desde_conexiones - Iniciando construcción de grafo con NetworkX. Usuarios con datos de conexión: 10000000. Total de nodos a considerar en el grafo: 10000000.
+2025-06-24 20:53:34,172 - INFO - construccion_grafo - __init__ - Grafo NetworkX dirigido inicializado.
+2025-06-24 20:53:34,172 - INFO - construccion_grafo - construir_grafo_desde_conexiones - Añadiendo nodos al grafo...
+2025-06-24 20:53:37,341 - INFO - construccion_grafo - construir_grafo_desde_conexiones - 10000000 nodos añadidos/asegurados en el grafo.
+2025-06-24 20:53:37,341 - INFO - construccion_grafo - construir_grafo_desde_conexiones - Generando y añadiendo aristas al grafo...

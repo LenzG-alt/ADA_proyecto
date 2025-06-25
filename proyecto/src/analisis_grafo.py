@@ -223,7 +223,7 @@ def encontrar_comunidades(grafo_nx, metodo='louvain'):
     grafo_para_comunidades = grafo_nx
     if grafo_nx.is_directed():
         logging.info("Convirtiendo grafo a no dirigido para detección de comunidades Louvain.")
-        grafo_para_comunidades = grafo_nx.to_undirected()
+        grafo_para_comunidades = grafo_nx.to_undirected() ##demora demasiado crear un grafo no dirigido
 
     if metodo == 'louvain':
         try:

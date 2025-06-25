@@ -1,5 +1,6 @@
 # construccion_grafo.py
 import networkx as nx
+from tqdm import tqdm
 from utils import medir_tiempo
 import logging
 
@@ -69,27 +70,56 @@ def construir_grafo_desde_conexiones(conexiones, num_total_usuarios_en_dataset):
 
     g_nx = GrafoNX(dirigido=True)
 
-    # Añadir todos los nodos esperados. Esto es importante si 'num_total_usuarios_en_dataset'
+    # Añadir todos los nodos esperados de una sola vez.
+    # Esto es importante si 'num_total_usuarios_en_dataset'
     # representa el universo de usuarios, incluyendo aquellos que podrían no tener conexiones
     # salientes o entrantes dentro del subconjunto de 'conexiones'.
-    for i in range(num_total_usuarios_en_dataset):
-        g_nx.agregar_nodo(i)
+    logging.info("Añadiendo nodos al grafo...")
+    if num_total_usuarios_en_dataset > 0:
+        # Envolver add_nodes_from con tqdm si es una operación potencialmente larga,
+        # aunque para add_nodes_from(range(N)) es usualmente muy rápido.
+        # No obstante, por consistencia y para datasets masivos, podemos hacerlo.
+        # Como range() no tiene len() fácil para tqdm sin convertir a lista,
+        # y add_nodes_from no devuelve progreso, un tqdm simple sin total es una opción,
+        # o podemos asumir que es rápido y no poner tqdm aquí.
+        # Por ahora, lo dejamos sin tqdm ya que suele ser instantáneo.
+        g_nx.grafo.add_nodes_from(range(num_total_usuarios_en_dataset))
+        logging.info(f"{num_total_usuarios_en_dataset} nodos añadidos/asegurados en el grafo.")
+    else:
+        logging.warning("num_total_usuarios_en_dataset es 0, no se añadirán nodos inicialmente por rango.")
 
-    for u, amigos in enumerate(conexiones):
-        # 'u' es el ID del usuario origen (0 hasta num_usuarios_cargados - 1)
-        # Verificamos que 'u' esté dentro del rango de nodos definidos para el grafo
-        if u < num_total_usuarios_en_dataset:
-            for v in amigos:
-                # 'v' es el ID del usuario destino
-                # Validar que el nodo v también esté dentro del rango de nodos definidos.
-                if v < num_total_usuarios_en_dataset:
-                    g_nx.agregar_arista(u, v)
-                # else:
-                #     logging.warning(f"Usuario {u} sigue a {v}, pero el usuario {v} ({v}) está fuera del rango total de usuarios ({num_total_usuarios_en_dataset}). Arista no añadida.")
-        # else:
-            # Esto no debería ocurrir si 'conexiones' se genera correctamente hasta num_usuarios_cargados
-            # y num_usuarios_cargados <= num_total_usuarios_en_dataset
-            # logging.warning(f"Usuario {u} está fuera del rango total de usuarios ({num_total_usuarios_en_dataset}). Conexiones no añadidas.")
+    # Generador para las aristas con tqdm integrado en la iteración del generador
+    # Es difícil saber el número total de aristas de antemano sin una pasada previa,
+    # así que tqdm aquí no tendrá un 'total' a menos que lo calculemos.
+    # Una alternativa es poner tqdm alrededor de la llamada a add_edges_from
+    # si el generador se consume progresivamente y add_edges_from lo permite.
+
+    # Estimación del total de aristas para tqdm (opcional, puede ser costoso)
+    # total_aristas_estimado = sum(len(amigos) for _, amigos in enumerate(conexiones))
+    # logging.info(f"Estimación inicial de aristas a procesar: {total_aristas_estimado}")
+
+    logging.info("Generando y añadiendo aristas al grafo...")
+
+    # Envolveremos el generador con tqdm aquí para seguir el progreso de las aristas generadas.
+    # El 'total' podría ser el número de usuarios (conexiones) ya que cada uno genera un lote de aristas.
+    # O, si tenemos una estimación del total de aristas, podríamos usar eso.
+    # Por simplicidad y eficiencia, usaremos len(conexiones) como total para el progreso de "procesamiento de usuarios para aristas".
+
+    def generar_aristas_con_progreso(conexiones_data, total_usuarios):
+        with tqdm(total=len(conexiones_data), desc="Procesando usuarios para aristas", unit="usuarios", disable=logging.getLogger().level > logging.INFO) as pbar_usuarios_aristas:
+            for u_idx, amigos_de_u in enumerate(conexiones_data):
+                if u_idx < total_usuarios:
+                    for v_id in amigos_de_u:
+                        if v_id < total_usuarios:
+                            yield (u_idx, v_id)
+                pbar_usuarios_aristas.update(1)
+
+    # Añadir aristas
+    # Si add_edges_from consume el generador de una vez, el tqdm anterior es suficiente.
+    # Si add_edges_from lo consume iterativamente, el tqdm dentro del generador es mejor.
+    # NetworkX add_edges_from consume el iterable.
+    g_nx.grafo.add_edges_from(generar_aristas_con_progreso(conexiones, num_total_usuarios_en_dataset))
+    logging.info("Todas las aristas generadas han sido añadidas al grafo.")
 
     g_nx.mostrar_info_basica()
     return g_nx
